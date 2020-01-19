@@ -1,153 +1,197 @@
-# A simple program for solving sudoku puzzles in python
+from timeit import default_timer as timer
+from sudoku_puzzles import *
 
-# Board metadata
-cols = [1, 2, 3, 4, 5, 6, 7, 8, 9, 
-	1, 2, 3, 4, 5, 6, 7, 8, 9, 
-	1, 2, 3, 4, 5, 6, 7, 8, 9,
-	1, 2, 3, 4, 5, 6, 7, 8, 9,
-	1, 2, 3, 4, 5, 6, 7, 8, 9,
-	1, 2, 3, 4, 5, 6, 7, 8, 9,
-	1, 2, 3, 4, 5, 6, 7, 8, 9, 
-	1, 2, 3, 4, 5, 6, 7, 8, 9, 
-	1, 2, 3, 4, 5, 6, 7, 8, 9]
-rows = sorted(cols)
-boxs = [1, 1, 1, 4, 4, 4, 7, 7, 7, 
-	1, 1, 1, 4, 4, 4, 7, 7, 7, 
-	1, 1, 1, 4, 4, 4, 7, 7, 7, 
-	2, 2, 2, 5, 5, 5, 8, 8, 8, 
-	2, 2, 2, 5, 5, 5, 8, 8, 8, 
-	2, 2, 2, 5, 5, 5, 8, 8, 8, 
-	3, 3, 3, 6, 6, 6, 9, 9, 9, 
-	3, 3, 3, 6, 6, 6, 9, 9, 9, 
-	3, 3, 3, 6, 6, 6, 9, 9, 9]
-
-# Indices in the same row, column, or box for each element
-ind_list = [[] for l in range(81)]
-for i in range(81):
-	for j in range(81):
-		if i != j:
-			if cols[i] == cols[j] or rows[i] == rows[j] or boxs[i] == boxs[j]:
-				ind_list[i].append(j)
-
-# Numbers in a sudoku puzzle
-nums = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-
-
-
+peers = [ [1,2,3,4,5,6,7,8,9,10,11,18,19,20,27,36,45,54,63,72],
+          [0,2,3,4,5,6,7,8,9,10,11,18,19,20,28,37,46,55,64,73],
+          [0,1,3,4,5,6,7,8,9,10,11,18,19,20,29,38,47,56,65,74],
+          [0,1,2,4,5,6,7,8,12,13,14,21,22,23,30,39,48,57,66,75],
+          [0,1,2,3,5,6,7,8,12,13,14,21,22,23,31,40,49,58,67,76],
+          [0,1,2,3,4,6,7,8,12,13,14,21,22,23,32,41,50,59,68,77],
+          [0,1,2,3,4,5,7,8,15,16,17,24,25,26,33,42,51,60,69,78],
+          [0,1,2,3,4,5,6,8,15,16,17,24,25,26,34,43,52,61,70,79],
+          [0,1,2,3,4,5,6,7,15,16,17,24,25,26,35,44,53,62,71,80],
+          [0,1,2,10,11,12,13,14,15,16,17,18,19,20,27,36,45,54,63,72],
+          [0,1,2,9,11,12,13,14,15,16,17,18,19,20,28,37,46,55,64,73],
+          [0,1,2,9,10,12,13,14,15,16,17,18,19,20,29,38,47,56,65,74],
+          [3,4,5,9,10,11,13,14,15,16,17,21,22,23,30,39,48,57,66,75],
+          [3,4,5,9,10,11,12,14,15,16,17,21,22,23,31,40,49,58,67,76],
+          [3,4,5,9,10,11,12,13,15,16,17,21,22,23,32,41,50,59,68,77],
+          [6,7,8,9,10,11,12,13,14,16,17,24,25,26,33,42,51,60,69,78],
+          [6,7,8,9,10,11,12,13,14,15,17,24,25,26,34,43,52,61,70,79],
+          [6,7,8,9,10,11,12,13,14,15,16,24,25,26,35,44,53,62,71,80],
+          [0,1,2,9,10,11,19,20,21,22,23,24,25,26,27,36,45,54,63,72],
+          [0,1,2,9,10,11,18,20,21,22,23,24,25,26,28,37,46,55,64,73],
+          [0,1,2,9,10,11,18,19,21,22,23,24,25,26,29,38,47,56,65,74],
+          [3,4,5,12,13,14,18,19,20,22,23,24,25,26,30,39,48,57,66,75],
+          [3,4,5,12,13,14,18,19,20,21,23,24,25,26,31,40,49,58,67,76],
+          [3,4,5,12,13,14,18,19,20,21,22,24,25,26,32,41,50,59,68,77],
+          [6,7,8,15,16,17,18,19,20,21,22,23,25,26,33,42,51,60,69,78],
+          [6,7,8,15,16,17,18,19,20,21,22,23,24,26,34,43,52,61,70,79],
+          [6,7,8,15,16,17,18,19,20,21,22,23,24,25,35,44,53,62,71,80],
+          [0,9,18,28,29,30,31,32,33,34,35,36,37,38,45,46,47,54,63,72],
+          [1,10,19,27,29,30,31,32,33,34,35,36,37,38,45,46,47,55,64,73],
+          [2,11,20,27,28,30,31,32,33,34,35,36,37,38,45,46,47,56,65,74],
+          [3,12,21,27,28,29,31,32,33,34,35,39,40,41,48,49,50,57,66,75],
+          [4,13,22,27,28,29,30,32,33,34,35,39,40,41,48,49,50,58,67,76],
+          [5,14,23,27,28,29,30,31,33,34,35,39,40,41,48,49,50,59,68,77],
+          [6,15,24,27,28,29,30,31,32,34,35,42,43,44,51,52,53,60,69,78],
+          [7,16,25,27,28,29,30,31,32,33,35,42,43,44,51,52,53,61,70,79],
+          [8,17,26,27,28,29,30,31,32,33,34,42,43,44,51,52,53,62,71,80],
+          [0,9,18,27,28,29,37,38,39,40,41,42,43,44,45,46,47,54,63,72],
+          [1,10,19,27,28,29,36,38,39,40,41,42,43,44,45,46,47,55,64,73],
+          [2,11,20,27,28,29,36,37,39,40,41,42,43,44,45,46,47,56,65,74],
+          [3,12,21,30,31,32,36,37,38,40,41,42,43,44,48,49,50,57,66,75],
+          [4,13,22,30,31,32,36,37,38,39,41,42,43,44,48,49,50,58,67,76],
+          [5,14,23,30,31,32,36,37,38,39,40,42,43,44,48,49,50,59,68,77],
+          [6,15,24,33,34,35,36,37,38,39,40,41,43,44,51,52,53,60,69,78],
+          [7,16,25,33,34,35,36,37,38,39,40,41,42,44,51,52,53,61,70,79],
+          [8,17,26,33,34,35,36,37,38,39,40,41,42,43,51,52,53,62,71,80],
+          [0,9,18,27,28,29,36,37,38,46,47,48,49,50,51,52,53,54,63,72],
+          [1,10,19,27,28,29,36,37,38,45,47,48,49,50,51,52,53,55,64,73],
+          [2,11,20,27,28,29,36,37,38,45,46,48,49,50,51,52,53,56,65,74],
+          [3,12,21,30,31,32,39,40,41,45,46,47,49,50,51,52,53,57,66,75],
+          [4,13,22,30,31,32,39,40,41,45,46,47,48,50,51,52,53,58,67,76],
+          [5,14,23,30,31,32,39,40,41,45,46,47,48,49,51,52,53,59,68,77],
+          [6,15,24,33,34,35,42,43,44,45,46,47,48,49,50,52,53,60,69,78],
+          [7,16,25,33,34,35,42,43,44,45,46,47,48,49,50,51,53,61,70,79],
+          [8,17,26,33,34,35,42,43,44,45,46,47,48,49,50,51,52,62,71,80],
+          [0,9,18,27,36,45,55,56,57,58,59,60,61,62,63,64,65,72,73,74],
+          [1,10,19,28,37,46,54,56,57,58,59,60,61,62,63,64,65,72,73,74],
+          [2,11,20,29,38,47,54,55,57,58,59,60,61,62,63,64,65,72,73,74],
+          [3,12,21,30,39,48,54,55,56,58,59,60,61,62,66,67,68,75,76,77],
+          [4,13,22,31,40,49,54,55,56,57,59,60,61,62,66,67,68,75,76,77],
+          [5,14,23,32,41,50,54,55,56,57,58,60,61,62,66,67,68,75,76,77],
+          [6,15,24,33,42,51,54,55,56,57,58,59,61,62,69,70,71,78,79,80],
+          [7,16,25,34,43,52,54,55,56,57,58,59,60,62,69,70,71,78,79,80],
+          [8,17,26,35,44,53,54,55,56,57,58,59,60,61,69,70,71,78,79,80],
+          [0,9,18,27,36,45,54,55,56,64,65,66,67,68,69,70,71,72,73,74],
+          [1,10,19,28,37,46,54,55,56,63,65,66,67,68,69,70,71,72,73,74],
+          [2,11,20,29,38,47,54,55,56,63,64,66,67,68,69,70,71,72,73,74],
+          [3,12,21,30,39,48,57,58,59,63,64,65,67,68,69,70,71,75,76,77],
+          [4,13,22,31,40,49,57,58,59,63,64,65,66,68,69,70,71,75,76,77],
+          [5,14,23,32,41,50,57,58,59,63,64,65,66,67,69,70,71,75,76,77],
+          [6,15,24,33,42,51,60,61,62,63,64,65,66,67,68,70,71,78,79,80],
+          [7,16,25,34,43,52,60,61,62,63,64,65,66,67,68,69,71,78,79,80],
+          [8,17,26,35,44,53,60,61,62,63,64,65,66,67,68,69,70,78,79,80],
+          [0,9,18,27,36,45,54,55,56,63,64,65,73,74,75,76,77,78,79,80],
+          [1,10,19,28,37,46,54,55,56,63,64,65,72,74,75,76,77,78,79,80],
+          [2,11,20,29,38,47,54,55,56,63,64,65,72,73,75,76,77,78,79,80],
+          [3,12,21,30,39,48,57,58,59,66,67,68,72,73,74,76,77,78,79,80],
+          [4,13,22,31,40,49,57,58,59,66,67,68,72,73,74,75,77,78,79,80],
+          [5,14,23,32,41,50,57,58,59,66,67,68,72,73,74,75,76,78,79,80],
+          [6,15,24,33,42,51,60,61,62,69,70,71,72,73,74,75,76,77,79,80],
+          [7,16,25,34,43,52,60,61,62,69,70,71,72,73,74,75,76,77,78,80],
+          [8,17,26,35,44,53,60,61,62,69,70,71,72,73,74,75,76,77,78,79] ]
 
 # Print a puzzle
-def print_sudoku(values):
-	v = [v if v != 0 else " " for v in values]
+def print_sudoku(s):
+	v = [v if v != 0 else " " for v in s]
 	row_block = "+ - - - + - - - + - - - +"
 	for r in range(13):
-		if r in [0, 4, 8, 12]: print row_block
+		if r in [0, 4, 8, 12]: print(row_block)
 		else:
 			for c in range(13):
-				if c in [0, 4, 8]: print "|",
-				elif c in [12]: print "|"
+				if c in [0, 4, 8]: print("|", end = " "),
+				elif c in [12]: print("|")
 				else: 
-					print v[0],
+					print(v[0], end = " "),
 					v = v[1:len(v)]
 
-# Get number of empty elements remaining
-def num_empties(s): 
-	return(sum([1 for i in range(81) if s[i][0] == 0]))
 
-# Get everything an element can't be
-def get_cant_bes(s, element):
-	res = [s[i][0] for i in ind_list[element]]
-	return(set([r for r in res if r > 0]))
-
-# If an element can only be one number, it's that
-def populate_cant_bes(s):
+# Get options for each
+def getCandidates(s):
+	out = [[] for i in range(81)]
 	for i in range(81):
-		if s[i][0] == 0:
-			cbs = get_cant_bes(s, i)
-			if len(cbs) == 8:
-				s[i][0] = [n for n in nums if n not in cbs][0]
-	return(s)
+		if s[i] > 0:
+			out[i] = [s[i]]
+		else:
+			options = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+			for j in range(20):
+				if s[peers[i][j]] > 0:
+					if s[peers[i][j]] in options:
+						options.remove(s[peers[i][j]])
+			out[i] = options
+	return out
 
-# If there's a number that can't be anywhere else in (row, col, box), it's that
-def populate_exclusive(s, element, dim):
-	in_already = [s[i][0] for i in range(81) if s[i][dim] == s[element][dim] and s[i][0] != 0]
-	empty_in_dim = 0
-	cb_in_dim = []
-	flat_list = []
-	for i in range(81):
-		if s[i][dim] == s[element][dim]:
-			if s[i][0] == 0:
-				if i != element:
-					cb_in_dim.append(get_cant_bes(s, i))
-					empty_in_dim += 1
-	for sublist in cb_in_dim:
-	    for item in sublist:
-	        flat_list.append(item)
-	for n in range(1, 10):
-		if flat_list.count(n) == empty_in_dim:
-	 		if n not in in_already:
-	 			s[element][0] = n
-	return(s)
+# Get lengths. 
+def getLengths(candidates, s): return [len(candidates[i]) for i in range(81) if s[i] == 0]
 
-# Attempt to solve with logic using strategies in previous two functions
-def solve_logic(s):
-	empty_start, empty_finish = 1, 0
-	while(empty_finish != empty_start):
-		empty_start = num_empties(s)
-		for j in range(1, 4):
-			s = populate_cant_bes(s)
-			for i in range(81):
-				if s[i][0] == 0:
-					s = populate_exclusive(s, i, j)
-		empty_finish = num_empties(s)
-	return(s)
+# Get empties
+def getEmpties(s): return [i for i in range(81) if s[i] == 0]
 
-# Solve with backtracking - guaranteed solution if one exists
-def solve_backtracking(s, empties):
-	if len(empties) == 0:
-		return(True)
-	empty = empties[0]
-	options = [n for n in nums if n not in get_cant_bes(s, empty)]
+# Sort empties by length
+def sortEmpties(empties, lengths): return [x for _,x in sorted(zip(lengths, empties))]
+
+
+def solveBacktracking(s, empties, candidates):
+	if len(empties) == 0: return True
+	index = empties[0]
+	n_cand = len(candidates[index])
+	if n_cand > 1:
+		for e in empties[1:]:
+			if len(candidates[e]) < n_cand:
+				n_cand = len(candidates[e])
+				index = e
+				if n_cand == 1: break
+	options = candidates[index]
+	legal = True
 	for o in options:
-		s[empty][0] = o
-		if solve_backtracking(s, empties[1:]): return(True)
-		else: s[empty][0] = 0
-	return(False)
+		to_update = []
+		for p in peers[index]:
+			if o in candidates[p]:
+				if len(candidates[p]) == 1:
+					legal = False
+					break
+				candidates[p].remove(o)
+				to_update.append(p)
+		if legal:
+			s[index] = o
+			empties.remove(index)
+			if solveBacktracking(s, empties, candidates):
+				return True
+			# Backtrack
+			s[index] = 0
+			empties.append(index)
+		for p in to_update:
+			candidates[p].append(o)
+		legal = True
+	return False
 
-# Full Solver - first try logic, then backtracking
-def solve_sudoku(values):
-	s = {}
-	for i in range(81):
-		s[i] = [values[i], rows[i], cols[i], boxs[i]]
-	solve_logic(s)
-	if num_empties(s) == 0:
-		print_sudoku(s[i][0] for i in range(81))
-		return(s)
-	else:
-		empties = [i for i in range(81) if s[i][0] == 0]
-		nopts = [(9-len(get_cant_bes(s, i))) for i in empties]
-		empties = [x for _,x in sorted(zip(nopts, empties))]
-		solve_backtracking(s, empties)
-		if num_empties(s) == 0:
-			print_sudoku(s[i][0] for i in range(81))
-			return(s)
-		else: 
-			print("no solution found")
 
-# An example puzzle
-values = [2, 1, 0, 0, 0, 0, 0, 0, 0, 
-	  4, 0, 8, 0, 0, 1, 0, 2, 0, 
-	  0, 6, 5, 0, 2, 0, 0, 0, 4, 
-	  0, 0, 2, 5, 0, 3, 0, 9, 0, 
-	  8, 0, 7, 0, 0, 0, 5, 0, 2, 
-	  0, 5, 0, 2, 0, 4, 7, 0, 0, 
-	  5, 0, 0, 0, 1, 0, 4, 7, 0, 
-	  0, 2, 0, 7, 0, 0, 6, 0, 1, 
-	  0, 0, 0, 0, 0, 0, 0, 8, 9]
-
+def solveSudoku(s):
+	candidates = getCandidates(s)
+	lengths = getLengths(candidates, s)
+	empties = getEmpties(s)
+	empties = sortEmpties(empties, lengths)
+	solveBacktracking(s, empties, candidates)
+	return s
 
 # Execute
 if __name__ == "__main__":
-	print("\nan empty sudoku puzzle:")
-	print_sudoku(values)
-	print("\nsolved!")
-	solve_sudoku(values)
+
+	print("\n easy sudoku")
+	print_sudoku(easy_sudoku)
+	start = timer()
+	solveSudoku(easy_sudoku)
+	end = timer()
+	print_sudoku(easy_sudoku)
+	print("time to complete (seconds):")
+	print(end - start)
+
+	print("\n hard sudoku")
+	print_sudoku(hard_sudoku)
+	start = timer()
+	solveSudoku(hard_sudoku)
+	end = timer()
+	print_sudoku(hard_sudoku)
+	print("time to complete (seconds):")
+	print(end - start)
+
+	print("\n evil sudoku")
+	print_sudoku(evil_sudoku)
+	start = timer()
+	solveSudoku(evil_sudoku)
+	end = timer()
+	print_sudoku(evil_sudoku)
+	print("time to complete (seconds):")
+	print(end - start)
