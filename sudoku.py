@@ -95,7 +95,7 @@ if __name__ == "__main__":
 	end = timer()
 	print_sudoku(easy_sudoku)
 	print("time to complete (seconds):")
-	print(end - start)
+	print(round(end - start, 4))
 
 	# Solve a hard puzzle
 	print("\n hard sudoku")
@@ -105,7 +105,7 @@ if __name__ == "__main__":
 	end = timer()
 	print_sudoku(hard_sudoku)
 	print("time to complete (seconds):")
-	print(end - start)
+	print(round(end - start, 4))
 
 	# Solve a very hard puzzle
 	print("\n evil sudoku")
@@ -115,4 +115,4 @@ if __name__ == "__main__":
 	end = timer()
 	print_sudoku(evil_sudoku)
 	print("time to complete (seconds):")
-	print(end - start)
+	print(round(end - start, 4))
