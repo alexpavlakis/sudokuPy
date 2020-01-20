@@ -2,6 +2,8 @@
 Python sudoku solver
 
 # Usage
+
+
 ```
 alexpavlakis$ python3 sudoku.py
 
